@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일본 여행 필수 도구</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 탭 스타일 */
+        .tab-btn.active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 flex items-center justify-center">
+    <div class="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        <header class="text-center p-6 bg-gray-50 border-b">
+            <h1 class="text-2xl font-bold text-gray-800">일본 여행 필수 도구 🇯🇵</h1>
+            <p class="text-gray-500 mt-1 text-sm">번역, 환율, 지하철 경로까지 한번에!</p>
+        </header>
+
+
+        <!-- 탭 네비게이션 -->
+        <div class="flex border-b">
+            <button data-tab="translator" class="tab-btn flex-1 p-4 font-semibold text-sm text-gray-500 border-b-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none active">번역</button>
+            <button data-tab="exchange" class="tab-btn flex-1 p-4 font-semibold text-sm text-gray-500 border-b-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">환율</button>
+            <button data-tab="subway" class="tab-btn flex-1 p-4 font-semibold text-sm text-gray-500 border-b-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">지하철</button>
+        </div>
+
+
+        <main class="p-6">
+            <!-- 번역기 탭 -->
+            <div id="translator" class="tab-content active">
+                <div class="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500"><path d="m5 8 6 6"></path><path d="m4 14 6-6 2-3"></path><path d="M2 5h12"></path><path d="M7 2h1"></path><path d="m22 22-5-10-5 10"></path><path d="M14 18h6"></path></svg>
+                    <h2 class="text-xl font-semibold text-gray-700 ml-2">실시간 번역기</h2>
+                </div>
+                <div class="space-y-4">
+                    <textarea id="korean-text" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="번역할 한국어 문장을 입력하세요..."></textarea>
+                    <button id="translate-button" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 ease-in-out flex items-center justify-center">
+                        <span id="translate-btn-text">일본어로 번역하기</span>
+                        <div id="translate-loader" class="loader hidden ml-3"></div>
+                    </button>
+                    <div class="bg-gray-50 p-4 rounded-lg min-h-[100px]">
+                        <h3 class="font-semibold text-gray-600 mb-2">번역 결과 (일본어)</h3>
+                        <p id="japanese-text" class="text-gray-800 whitespace-pre-wrap">ここに翻訳結果が表示されます。</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 환율 계산기 탭 -->
+            <div id="exchange" class="tab-content">
+                 <div class="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <h2 class="text-xl font-semibold text-gray-700 ml-2">양방향 환율 계산기</h2>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="krw-input" class="block text-sm font-medium text-gray-700">원 (KRW)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span class="text-gray-500 sm:text-sm">₩</span>
+                            </div>
+                            <input type="number" id="krw-input" class="w-full p-3 pl-7 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-gray-400 h-6 w-6 transform rotate-90"><polyline points="15 18 9 12 15 6"></polyline><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <div>
+                        <label for="jpy-input" class="block text-sm font-medium text-gray-700">엔 (JPY)</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span class="text-gray-500 sm:text-sm">¥</span>
+                            </div>
+                            <input type="number" id="jpy-input" class="w-full p-3 pl-7 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <div id="rate-info" class="text-center text-xs text-gray-500 mt-4 p-2 bg-gray-50 rounded-md">
+                    환율 정보를 불러오는 중...
+                </div>
+            </div>
+            
+            <!-- 지하철 경로 검색 탭 -->
+            <div id="subway" class="tab-content">
+                <div class="flex items-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M10 3.16a9 9 0 1 0 10.03 7.63"></path><path d="M22 12a10 10 0 1 0-19.1 4.35"></path><path d="M2 14h1.34a2 2 0 0 0 1.96-1.56L6 5h2l.66 7.44a2 2 0 0 0 1.96 1.56H14"></path><path d="m16 5 3 5-3 5"></path><path d="M19 10H5.5"></path></svg>
+                    <h2 class="text-xl font-semibold text-gray-700 ml-2">지하철 경로 검색</h2>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label for="departure-station" class="block text-sm font-medium text-gray-700">출발역</label>
+                        <input type="text" id="departure-station" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="예: 시부야역">
+                    </div>
+                    <div>
+                        <label for="arrival-station" class="block text-sm font-medium text-gray-700">도착역</label>
+                        <input type="text" id="arrival-station" class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="예: 신주쿠역">
+                    </div>
+                    <button id="search-route-button" class="w-full bg-red-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-300 ease-in-out">
+                        경로 검색하기
+                    </button>
+                    <p class="text-xs text-center text-gray-500">Google 지도로 검색 결과가 새 탭에서 열립니다.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+
+    <script type="module">
+        // --- 탭 기능 로직 ---
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === tabId) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+
+
+        // --- 번역기 로직 ---
+        const translateButton = document.getElementById('translate-button');
+        const koreanTextInput = document.getElementById('korean-text');
+        const japaneseTextOutput = document.getElementById('japanese-text');
+        const translateLoader = document.getElementById('translate-loader');
+        const translateBtnText = document.getElementById('translate-btn-text');
+
+
+        translateButton.addEventListener('click', handleTranslation);
+
+
+        async function handleTranslation() {
+            const koreanText = koreanTextInput.value.trim();
+            if (!koreanText) {
+                japaneseTextOutput.textContent = '번역할 내용을 입력해주세요.';
+                return;
+            }
+
+
+            showTranslateLoading(true);
+
+
+            try {
+                const apiKey = "";
+                const apiUrl = `https://generativelace.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const systemPrompt = "You are a helpful translator. Translate the given Korean text into natural-sounding Japanese.";
+                const payload = {
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    contents: [{ parts: [{ text: koreanText }] }],
+                };
+
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+
+                if (!response.ok) throw new Error(`API 요청 실패: ${response.statusText}`);
+
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+
+                if (candidate?.content?.parts?.[0]?.text) {
+                    japaneseTextOutput.textContent = candidate.content.parts[0].text;
+                } else {
+                    throw new Error('번역 결과를 받아오지 못했습니다.');
+                }
+
+
+            } catch (error) {
+                console.error('번역 중 오류 발생:', error);
+                japaneseTextOutput.textContent = '번역 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+            } finally {
+                showTranslateLoading(false);
+            }
+        }
+
+
+        function showTranslateLoading(isLoading) {
+            translateLoader.classList.toggle('hidden', !isLoading);
+            translateBtnText.textContent = isLoading ? '번역 중...' : '일본어로 번역하기';
+            translateButton.disabled = isLoading;
+        }
+
+
+        // --- 환율 계산기 로직 ---
+        const jpyInput = document.getElementById('jpy-input');
+        const krwInput = document.getElementById('krw-input');
+        const rateInfoDiv = document.getElementById('rate-info');
+        let jpyToKrwRate = null;
+
+
+        async function fetchExchangeRate() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                if (!response.ok) throw new Error('환율 정보를 가져올 수 없습니다.');
+                
+                const data = await response.json();
+                jpyToKrwRate = data.rates.KRW;
+                
+                const ratePer100Jpy = (jpyToKrwRate * 100).toFixed(2);
+                const updateTime = new Date(data.time_last_update_unix * 1000).toLocaleString('ko-KR');
+
+
+                rateInfoDiv.innerHTML = `현재 환율: 100엔 ≈ ${ratePer100Jpy}원<br>(업데이트: ${updateTime})`;
+            } catch (error) {
+                console.error('환율 정보 로딩 실패:', error);
+                rateInfoDiv.textContent = '환율 정보를 불러오는 데 실패했습니다.';
+                jpyToKrwRate = 8.5; // 예비 환율
+                rateInfoDiv.innerHTML += '<br>예상 환율(100엔 ≈ 850원)로 계산합니다.';
+            }
+        }
+
+
+        let isUpdating = false;
+        function updateConversion(source) {
+            if (jpyToKrwRate === null || isUpdating) return;
+            isUpdating = true;
+
+
+            if (source === 'jpy') {
+                const jpyValue = jpyInput.value;
+                if (jpyValue === '') {
+                    krwInput.value = '';
+                } else {
+                    const jpyAmount = parseFloat(jpyValue);
+                    krwInput.value = Math.round(jpyAmount * jpyToKrwRate);
+                }
+            } else if (source === 'krw') {
+                const krwValue = krwInput.value;
+                 if (krwValue === '') {
+                    jpyInput.value = '';
+                } else {
+                    const krwAmount = parseFloat(krwValue);
+                    const result = krwAmount / jpyToKrwRate;
+                    jpyInput.value = parseFloat(result.toFixed(2));
+                }
+            }
+            isUpdating = false;
+        }
+        
+        jpyInput.addEventListener('input', () => updateConversion('jpy'));
+        krwInput.addEventListener('input', () => updateConversion('krw'));
+        
+        fetchExchangeRate();
+
+
+        // --- 지하철 경로 검색 로직 ---
+        const departureInput = document.getElementById('departure-station');
+        const arrivalInput = document.getElementById('arrival-station');
+        const searchRouteButton = document.getElementById('search-route-button');
+
+
+        searchRouteButton.addEventListener('click', () => {
+            const departure = departureInput.value.trim();
+            const arrival = arrivalInput.value.trim();
+
+
+            if (!departure) {
+                departureInput.focus();
+                return;
+            }
+             if (!arrival) {
+                arrivalInput.focus();
+                return;
+            }
+
+
+            const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(departure + ', Japan')}&destination=${encodeURIComponent(arrival + ', Japan')}&travelmode=transit`;
+            window.open(googleMapsUrl, '_blank');
+        });
+    </script>
+</body>
+</html>
