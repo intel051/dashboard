@@ -32,13 +32,20 @@ async function generate(inputJson:string,model:string){
 }
 const cachedGenerate=unstable_cache(generate,['macro-week-gemini-v1'],{revalidate:86400});
 const pending=new Map<string,Promise<Awaited<ReturnType<typeof generate>>>>();
-export async function analyzeDate(date:string,regime:string,minImportance:number,eventId?:string):Promise<AiResponse>{
+export async function analyzeDate(date:string,regime:string,minImportance:number,eventId?:string,manualEvents?:unknown):Promise<AiResponse>{
  if(!process.env.GEMINI_API_KEY)throw new AnalysisError('Vercel 환경변수 GEMINI_API_KEY를 설정해 주세요.',503,'NOT_CONFIGURED');
- const source=await getInvestingCalendar(date,date).catch(error=>{const failure=investingFailure(error);throw new AnalysisError(failure.error,502,failure.code)});const events=releasedEvents(source.events,date,Date.now(),eventId).filter(e=>e.importance>=minImportance);
+ let source:{events:Event[];updated:string};
+ if(manualEvents!==undefined){
+  if(!Array.isArray(manualEvents)||manualEvents.length>50)throw new AnalysisError('직접 입력 지표는 최대 50개까지 분석할 수 있습니다.',400,'INVALID_INPUT');
+  const safe=(v:unknown,max:number)=>typeof v==='string'&&v.length<=max&&!/[\u0000-\u001f]/.test(v);
+  if(manualEvents.some((e:any)=>!e||!safe(e.id,100)||!safe(e.name,120)||!e.name.trim()||!safe(e.date,40)||!Number.isFinite(Date.parse(e.date))||![2,3].includes(e.importance)||!safe(e.actual,30)||!safe(e.forecast,30)||!safe(e.previous,30)))throw new AnalysisError('직접 입력한 지표의 날짜와 수치를 확인해 주세요.',400,'INVALID_INPUT');
+  source={events:manualEvents.map((e:any)=>({id:e.id,name:e.name,date:e.date,importance:e.importance,actual:e.actual,forecast:e.forecast,previous:e.previous,source:'직접 입력 · 사용자 확인 필요'})),updated:new Date().toISOString()};
+ }else source=await getInvestingCalendar(date,date).catch(error=>{const failure=investingFailure(error);throw new AnalysisError(failure.error,502,failure.code)});
+ const events=releasedEvents(source.events,date,Date.now(),eventId).filter(e=>e.importance>=minImportance);
  if(!events.length)throw new AnalysisError('선택한 날짜에 실제값이 발표된 분석 대상 지표가 없습니다. 연설·보고서는 원문 내용이 필요합니다.',422,'NO_RELEASES');
  const model=process.env.GEMINI_MODEL?.trim()||'gemini-3.5-flash-lite';if(!/^[a-zA-Z0-9._-]+$/.test(model))throw new AnalysisError('GEMINI_MODEL 형식을 확인해 주세요.',503,'AI_MODEL');
  const compact=events.map(({id,name,date,importance,actual,forecast,previous,revised,source})=>({id,name,date,importance,actual,forecast,previous,revised,source}));
- const inputJson=JSON.stringify({date,timezone:'Asia/Seoul',regime,scope:eventId?'indicator':'daily',events:compact,dataLimitations:['실시간 시세·금리·뉴스 미포함','현재 제공되는 발표·수정값 기준']});
+ const inputJson=JSON.stringify({date,timezone:'Asia/Seoul',regime,scope:eventId?'indicator':'daily',events:compact,dataLimitations:['실시간 시세·금리·뉴스 미포함',manualEvents!==undefined?'사용자가 직접 입력한 값이며 검증되지 않음':'현재 제공되는 발표·수정값 기준']});
  const digest=createHash('sha256').update(inputJson+model).digest('hex');let promise=pending.get(digest);if(!promise){promise=cachedGenerate(inputJson,model);pending.set(digest,promise)}
  try{const result=await promise;return {...result,sourceUpdatedAt:source.updated,model,date,eventCount:events.length,scope:eventId?'indicator':'daily'}}finally{pending.delete(digest)}
 }

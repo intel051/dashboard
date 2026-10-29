@@ -4,12 +4,12 @@ import {ArrowUpRight,ArrowDownRight,Minus,Sparkles,RefreshCw} from 'lucide-react
 import {assets} from './assets';
 import {directionLabel,type AiResponse} from './ai-types';
 import type {Event} from './model';
-export default function AiAnalysis({date,regime,minImportance,events,eventId,compact=false}:{date:string|null;regime:string;minImportance:number;events:Event[];eventId?:string;compact?:boolean}){
+export default function AiAnalysis({date,regime,minImportance,events,eventId,compact=false,manual=false}:{date:string|null;regime:string;minImportance:number;events:Event[];eventId?:string;compact?:boolean;manual?:boolean}){
  const revision=JSON.stringify(events.map(e=>[e.id,e.actual,e.forecast,e.previous,e.revised]));const signature=JSON.stringify({date,regime,minImportance,eventId,revision});
  const [result,setResult]=useState<{signature:string;data:AiResponse}|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');const requestId=useRef(0),abort=useRef<AbortController|null>(null);
  useEffect(()=>{requestId.current++;abort.current?.abort();setBusy(false);setError('');return ()=>abort.current?.abort()},[signature]);
  async function run(){if(!date)return;const id=++requestId.current;abort.current?.abort();const controller=new AbortController();abort.current=controller;setBusy(true);setError('');
- try{const response=await fetch('/api/analysis',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({date,regime,minImportance,eventId}),signal:controller.signal});const raw=await response.text();if(/^\s*</.test(raw))throw Error('AI 서버 대신 웹페이지가 반환되었습니다. 사이트 주소에서 다시 열어 주세요.');let data:any;try{data=JSON.parse(raw)}catch{throw Error('AI 서버 응답 형식을 확인할 수 없습니다.')};if(!response.ok)throw Error(data.error||'AI 분석에 실패했습니다.');if(!data.analysis||!Array.isArray(data.analysis.assets))throw Error('AI 분석 데이터가 올바르지 않습니다.');if(id===requestId.current)setResult({signature,data})}
+ try{const response=await fetch('/api/analysis',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({date,regime,minImportance,eventId,...(manual?{manualEvents:events.filter(e=>e.source==='직접 입력 · 사용자 확인 필요')}: {})}),signal:controller.signal});const raw=await response.text();if(/^\s*</.test(raw))throw Error('AI 서버 대신 웹페이지가 반환되었습니다. 사이트 주소에서 다시 열어 주세요.');let data:any;try{data=JSON.parse(raw)}catch{throw Error('AI 서버 응답 형식을 확인할 수 없습니다.')};if(!response.ok)throw Error(data.error||'AI 분석에 실패했습니다.');if(!data.analysis||!Array.isArray(data.analysis.assets))throw Error('AI 분석 데이터가 올바르지 않습니다.');if(id===requestId.current)setResult({signature,data})}
  catch(e:any){if(e.name!=='AbortError'&&id===requestId.current)setError(e.message||'AI 분석에 실패했습니다.')}
  finally{if(id===requestId.current)setBusy(false)}
  }
