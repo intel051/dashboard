@@ -3,7 +3,7 @@ import {unstable_cache} from 'next/cache';
 import {aiTickers,type AiAnalysis,type AiResponse} from '../ai-types';
 import {dateKey} from '../dates';
 import type {Event} from '../model';
-import {getInvestingCalendar} from './investing';
+import {getInvestingCalendar,investingFailure} from './investing';
 export class AnalysisError extends Error{status:number;code:string;retryAfter?:string;constructor(message:string,status=502,code='AI_ERROR',retryAfter?:string){super(message);this.status=status;this.code=code;this.retryAfter=retryAfter}}
 const text=(v:unknown,max=1200)=>typeof v==='string'&&v.trim()&&v.length<=max;
 export function validateAnalysis(value:any,ids:Set<string>):AiAnalysis{
@@ -34,7 +34,7 @@ const cachedGenerate=unstable_cache(generate,['macro-week-gemini-v1'],{revalidat
 const pending=new Map<string,Promise<Awaited<ReturnType<typeof generate>>>>();
 export async function analyzeDate(date:string,regime:string,minImportance:number,eventId?:string):Promise<AiResponse>{
  if(!process.env.GEMINI_API_KEY)throw new AnalysisError('Vercel 환경변수 GEMINI_API_KEY를 설정해 주세요.',503,'NOT_CONFIGURED');
- const source=await getInvestingCalendar(date,date);const events=releasedEvents(source.events,date,Date.now(),eventId).filter(e=>e.importance>=minImportance);
+ const source=await getInvestingCalendar(date,date).catch(error=>{const failure=investingFailure(error);throw new AnalysisError(failure.error,502,failure.code)});const events=releasedEvents(source.events,date,Date.now(),eventId).filter(e=>e.importance>=minImportance);
  if(!events.length)throw new AnalysisError('선택한 날짜에 실제값이 발표된 분석 대상 지표가 없습니다. 연설·보고서는 원문 내용이 필요합니다.',422,'NO_RELEASES');
  const model=process.env.GEMINI_MODEL?.trim()||'gemini-3.5-flash-lite';if(!/^[a-zA-Z0-9._-]+$/.test(model))throw new AnalysisError('GEMINI_MODEL 형식을 확인해 주세요.',503,'AI_MODEL');
  const compact=events.map(({id,name,date,importance,actual,forecast,previous,revised,source})=>({id,name,date,importance,actual,forecast,previous,revised,source}));
