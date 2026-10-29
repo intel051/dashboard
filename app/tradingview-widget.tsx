@@ -1,0 +1,7 @@
+'use client';
+import {useEffect,useRef,useState} from 'react';
+export default function TradingViewWidget({type,config}:{type:string;config:Record<string,unknown>}){
+ const ref=useRef<HTMLDivElement>(null);const [failed,setFailed]=useState(false);const [attempt,setAttempt]=useState(0);const sig=JSON.stringify(config);const advanced=type==='advanced-chart';
+ useEffect(()=>{const root=ref.current;if(!root)return;root.replaceChildren();setFailed(false);const container=document.createElement('div');container.className='tradingview-widget-container__widget';if(advanced){container.style.height='100%';container.style.width='100%'}root.appendChild(container);const script=document.createElement('script');script.src='https://s3.tradingview.com/external-embedding/embed-widget-'+type+'.js';script.async=true;script.textContent=sig;script.onerror=()=>setFailed(true);root.appendChild(script);return ()=>{script.onerror=null;root.replaceChildren()}},[type,sig,attempt,advanced]);
+ return <div className={advanced?'advanced-widget-frame':undefined}><div className={advanced?'advanced-chart-slot':undefined}><div ref={ref} className="tradingview-widget-container widget"/></div>{failed&&<div className="widget-error" role="status">트레이딩뷰 차트 스크립트를 불러오지 못했습니다. <button onClick={()=>setAttempt(n=>n+1)}>다시 시도</button></div>}<a className="attribution" href="https://www.tradingview.com/" target="_blank" rel="noreferrer">Market data by TradingView ↗</a></div>
+}
