@@ -3,7 +3,7 @@ import {unstable_cache} from 'next/cache';
 import {aiTickers,type AiAnalysis,type AiResponse} from '../ai-types';
 import {dateKey} from '../dates';
 import type {Event} from '../model';
-import {getInvestingCalendar,investingFailure} from './investing';
+import {getTradingViewCalendar,tradingViewFailure} from './tradingview-calendar';
 export class AnalysisError extends Error{status:number;code:string;retryAfter?:string;constructor(message:string,status=502,code='AI_ERROR',retryAfter?:string){super(message);this.status=status;this.code=code;this.retryAfter=retryAfter}}
 const text=(v:unknown,max=1200)=>typeof v==='string'&&v.trim()&&v.length<=max;
 export function validateAnalysis(value:any,ids:Set<string>):AiAnalysis{
@@ -40,7 +40,7 @@ export async function analyzeDate(date:string,regime:string,minImportance:number
   const safe=(v:unknown,max:number)=>typeof v==='string'&&v.length<=max&&!/[\u0000-\u001f]/.test(v);
   if(manualEvents.some((e:any)=>!e||!safe(e.id,100)||!safe(e.name,120)||!e.name.trim()||!safe(e.date,40)||!Number.isFinite(Date.parse(e.date))||![2,3].includes(e.importance)||!safe(e.actual,30)||!safe(e.forecast,30)||!safe(e.previous,30)))throw new AnalysisError('직접 입력한 지표의 날짜와 수치를 확인해 주세요.',400,'INVALID_INPUT');
   source={events:manualEvents.map((e:any)=>({id:e.id,name:e.name,date:e.date,importance:e.importance,actual:e.actual,forecast:e.forecast,previous:e.previous,source:'직접 입력 · 사용자 확인 필요'})),updated:new Date().toISOString()};
- }else source=await getInvestingCalendar(date,date).catch(error=>{const failure=investingFailure(error);throw new AnalysisError(failure.error,502,failure.code)});
+ }else source=await getTradingViewCalendar(date,date).catch(error=>{const failure=tradingViewFailure(error);throw new AnalysisError(failure.error,502,failure.code)});
  const events=releasedEvents(source.events,date,Date.now(),eventId).filter(e=>e.importance>=minImportance);
  if(!events.length)throw new AnalysisError('선택한 날짜에 실제값이 발표된 분석 대상 지표가 없습니다. 연설·보고서는 원문 내용이 필요합니다.',422,'NO_RELEASES');
  const model=process.env.GEMINI_MODEL?.trim()||'gemini-3.5-flash-lite';if(!/^[a-zA-Z0-9._-]+$/.test(model))throw new AnalysisError('GEMINI_MODEL 형식을 확인해 주세요.',503,'AI_MODEL');
