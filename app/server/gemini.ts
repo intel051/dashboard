@@ -27,6 +27,7 @@ async function generate(inputJson:string,model:string){
  if(!r.ok){
   let upstreamStatus='';try{const problem=await r.json();const status=problem?.error?.status;if(typeof status==='string'&&/^[A-Z_]{1,60}$/.test(status))upstreamStatus=status}catch{}
   const detail=' (HTTP '+r.status+(upstreamStatus?' · '+upstreamStatus:'')+' · 모델 '+model+')';
+  if(r.status===402)throw new AnalysisError('Gemini 결제 또는 선불 크레딧 상태로 요청이 거부됐습니다. AI Studio에서 이 API 키가 속한 프로젝트의 결제 상태와 크레딧 잔액을 확인해 주세요.'+detail,502,'AI_BILLING');
   if(r.status===429)throw new AnalysisError('Gemini 요청 속도 또는 할당량 제한입니다. AI Studio에서 이 모델의 할당량을 확인해 주세요.'+detail,429,'AI_QUOTA','60');
   if(r.status===401||r.status===403)throw new AnalysisError('Gemini API 키·프로젝트 권한 또는 지역 제한을 확인해 주세요.'+detail,502,'AI_CREDENTIALS');
   if(r.status===404)throw new AnalysisError('Gemini 모델을 찾을 수 없습니다. Vercel의 GEMINI_MODEL과 사용 가능한 모델을 확인해 주세요.'+detail,502,'AI_MODEL');
